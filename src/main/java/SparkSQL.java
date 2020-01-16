@@ -41,8 +41,8 @@ public class SparkSQL {
                                                        //" SUM(`KWH JANUARY 2010`)," +
                                                        //" SUM(`KWH FEBRUARY 2010`)," +
                                                        //" SUM(`KWH MARCH 2010`)" +
-                                                       " FROM Energy" +
-                                                       " GROUP BY `COMMUNITY AREA NAME`"
+                                                       " FROM Energy" //+
+                                                       //" GROUP BY `COMMUNITY AREA NAME`"
         );
         //sqlDF.show();
         sqlDF.repartition(1).write().format("csv").option("header", "true").save("output/result");
@@ -67,6 +67,8 @@ public class SparkSQL {
                                                  " WHERE num = 1");
         //sqlDF2.show();
         //sqlDF2.repartition(1).write().format("csv").option("header", "true").save("output/result");
+
+
 
     }
 }

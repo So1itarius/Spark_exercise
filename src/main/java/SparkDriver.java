@@ -2,18 +2,27 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
-import scala.Tuple3;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class SparkDriver {
+    protected static String Converter(String s) throws ParseException {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.ms");
+        //Date date = null;
+        //try { date = dateFormat.parse(s.toString().split(" ",2)[1]); } catch (ParseException e) { e.printStackTrace(); }
+        Date date = dateFormat.parse(s);
+        long unixTime = (Objects.requireNonNull(date)).getTime() /1000;
+        return String.valueOf(unixTime);
+
+    }
+
+
     public static void main(String[] args) throws IOException {
         Configuration conf = new Configuration();
         Path output = new Path("output");
@@ -93,21 +102,24 @@ public class SparkDriver {
                         .setAppName("Word Count").setMaster("local")
         );
 
+
         sparkContext4
                 .textFile("input/logs_example.csv")
                 .map(s-> s.split(","))
                 .filter(anObject -> "LOGIN".equals(anObject[3]))
                 //.collect(Collectors.groupingBy(p->p.eq))
                 //.collect(Collectors.toList())s
-                .mapToPair(line->new Tuple2<String,Tuple2>(line[2],new Tuple2<String,String>(line[4], line[6])))
+                .mapToPair(line->new Tuple2<String,Tuple2>(line[2],new Tuple2<String,String>(line[4], Converter(line[6]))))
                 //.reduceByKey((a1,a2)->a1+a2)
                 //.reduceByKey((a1,a2)->a1+a2)
                 .distinct()
-                .groupByKey()
-                //.collect()
-                .saveAsTextFile("output/spamUser");
-        sparkContext4.stop();
+                .sortByKey()
+                .collect().forEach(System.out::println);
+                //.sorted(Comparator.naturalOrder())
+                //.saveAsTextFile("output/spamUser");
 
+        sparkContext4.stop();
+        //System.out.println(sparkContext4));
 
     }
 }

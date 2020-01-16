@@ -49,13 +49,13 @@ public class SparkTasks {
                 .load("input/event_data_train.csv");
         //dataset1.printSchema();
         dataset1.createOrReplaceTempView("event_data");
-        Dataset<Row> sqlDF1 = spark.sql("select user_id as ev_us_id, count(action) as c_a" +
+        Dataset<Row> sqlDF1 = spark.sql("select user_id as ev_us_id" + //, count(action) as c_a" +
                                                 " from event_data" +
                                                 " where action=\"passed\"" +
                                                 " Group by user_id" +
                                                 " HAVING count(action)=(select count(distinct step_id) from event_data)");
         //sqlDF1.show();
-        //sqlDF1.repartition(1).write().format("csv").option("header", "true").save("output/result");
+        //sqlDF1.repartition(1).write().format("csv").option("header", "true").save("output/result/1");
 
         Dataset<Row> dataset2 = spark
                 .read()
@@ -73,8 +73,30 @@ public class SparkTasks {
         Dataset<Row> sqlDF3 = spark.sql("SELECT * from all_info order by c_st desc");
         //sqlDF3.show();
 
-        sqlDF3.repartition(1).write().format("csv").option("header", "true").save("output/result");
+        //sqlDF3.repartition(1).write().format("csv").option("header", "true").save("output/result");
 
+        Dataset<Row> sqlDF4_1 = spark.sql("select user_id, step_id from (select user_id, step_id,timestamp,submission_status," +
+                                                " row_number() over(PARTITION BY user_id order by user_id, timestamp desc) num" +
+                                                " from submissions_data" +
+                                                " order by user_id, timestamp)" +
+                                                " where num = 1");
+        Dataset<Row> sqlDF4_2 = spark.sql("select user_id, step_id" +
+                                                "" +
+                                                " from submissions_data" +
+                                                "" +
+                                                " where submission_status = \"correct\"");
+        //sqlDF4.show();
+        //sqlDF4_1.repartition(1).write().format("csv").option("header", "true").save("output/result/2");
+
+        //Dataset<Row> sqlDF5 = spark.sql(select
+        sqlDF4_1.except(sqlDF4_2).createOrReplaceTempView("result");
+        //sqlDF4_1.except(sqlDF4_2).repartition(1).write().format("csv").option("header", "true").save("output/result/3");
+        Dataset<Row> sqlDF4_3 = spark.sql("select step_id,count(step_id) as c" +
+                                                  " from result" +
+                                                  " group by step_id" +
+                                                  " order by count(step_id) desc" +
+                                                  " limit 1");
+        //sqlDF4_3.show();
     }
 
 }
