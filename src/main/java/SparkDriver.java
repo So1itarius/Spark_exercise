@@ -1,15 +1,18 @@
+import lombok.val;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
+import scala.Tuple3;
 
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class SparkDriver {
     protected static String Converter(String s) throws ParseException {
@@ -106,19 +109,27 @@ public class SparkDriver {
         sparkContext4
                 .textFile("input/logs_example.csv")
                 .map(s-> s.split(","))
-                .filter(anObject -> "LOGIN".equals(anObject[3]))
+                .filter(anObject -> "LOGIN".equals(anObject[3]));
                 //.collect(Collectors.groupingBy(p->p.eq))
                 //.collect(Collectors.toList())s
-                .mapToPair(line->new Tuple2<String,Tuple2>(line[2],new Tuple2<String,String>(line[4], Converter(line[6]))))
+                //.mapToPair(line->new Tuple2<String,ArrayList<String>>(line[2],line[4], Converter(line[6])))
+                //.mapToPair(line->new Tuple3<String,String,String>(line[2], line[4], Converter(line[6])))
                 //.reduceByKey((a1,a2)->a1+a2)
                 //.reduceByKey((a1,a2)->a1+a2)
-                .distinct()
-                .sortByKey()
-                .collect().forEach(System.out::println);
+                //.distinct()
+                //.groupByKey()
+                //.mapValues(s.groupByKey())
+                //.countByValue()
+                //.sorted()
+                //.mapToPair()
+                //.collect(Collectors.groupingBy((p) -> p[0]))
+                //.foreach(x->System.out.println(x));
+                //.forEach(x -> System.out.println(x));
                 //.sorted(Comparator.naturalOrder())
                 //.saveAsTextFile("output/spamUser");
 
         sparkContext4.stop();
+
         //System.out.println(sparkContext4));
 
     }
